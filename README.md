@@ -1,8 +1,33 @@
 # Feishu File Mailer
 
+![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D6)
+![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 把飞书收到的文件消息，自动转成 Foxmail 发件动作的 Windows 工具。
 
 这个项目适合这样的场景：你在飞书里给机器人发送文件，程序在指定 Windows 机器上接收文件、落盘，然后调用本机 Foxmail 的“发送到邮件收件人”能力，把附件带入写信窗口并自动填入固定收件人，最后触发发送快捷键。
+
+## 流程图
+
+```mermaid
+flowchart LR
+    A[Feishu file message] --> B[Long connection event]
+    B --> C{Whitelist check}
+    C -->|Pass| D[Queue task]
+    C -->|Skip| X[Ignore]
+    D --> E[Download file to local folder]
+    E --> F[Invoke Foxmail via Shell or SendTo]
+    F --> G[Paste fixed recipient]
+    G --> H[Send hotkey Ctrl+Enter]
+    H --> I[Write message_id to runtime/state.json]
+```
+
+## 一句话说明
+
+- 输入：飞书文件消息
+- 输出：本地文件 + Foxmail 发件动作
+- 适用：固定收件人、固定 Windows 机器、轻量自动转发
 
 ## 功能概览
 
@@ -255,4 +280,4 @@ dist\FeishuFileMailer\FeishuFileMailer.exe
 
 ## License
 
-仓库当前未单独附带许可证文件。如需开源发布，建议补一个明确的 `LICENSE`。
+本仓库使用 `MIT` 许可证，详见 [LICENSE](LICENSE)。
