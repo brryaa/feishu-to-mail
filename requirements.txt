@@ -1,0 +1,4 @@
+lark-oapi
+requests
+pywin32
+pywinauto

@@ -1,0 +1,17 @@
+{
+  "app_id": "cli_xxxxxxxxxxxxxxxxx",
+  "app_secret": "xxxxxxxxxxxxxxxxxxxxxxxx",
+  "download_dir": "C:\\\\FeishuDownloads",
+  "recipient_email": "receiver@example.com",
+  "subject_template": "飞书文件转发 - {file_name}",
+  "body_template": "文件名：{file_name}\r\n发送人 open_id：{sender_open_id}\r\n消息 ID：{message_id}",
+  "shell_verb_keyword": "foxmail",
+  "foxmail_window_title_regex": ".*Foxmail.*",
+  "startup_wait_seconds": 2,
+  "compose_wait_seconds": 20,
+  "send_hotkey": "^({ENTER})",
+  "dedupe_history_limit": 5000,
+  "allowed_chat_ids": [],
+  "allowed_sender_open_ids": [],
+  "log_level": "INFO"
+}
