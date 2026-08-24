@@ -4,7 +4,7 @@
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-把飞书收到的文件消息，自动转成 Foxmail 发件动作的 Windows 工具。
+把飞书收到的文件或图片消息，自动转成 Foxmail 发件动作的 Windows 工具。
 
 这个项目适合这样的场景：你在飞书里给机器人发送文件，程序在指定 Windows 机器上接收文件、落盘，然后调用本机 Foxmail 的“发送到邮件收件人”能力，把附件带入写信窗口并自动填入固定收件人，最后触发发送快捷键。
 
@@ -12,7 +12,7 @@
 
 ```mermaid
 flowchart LR
-    A[Feishu file message] --> B[Long connection event]
+    A[Feishu file or image message] --> B[Long connection event]
     B --> C{Whitelist check}
     C -->|Pass| D[Queue task]
     C -->|Skip| X[Ignore]
@@ -25,14 +25,14 @@ flowchart LR
 
 ## 一句话说明
 
-- 输入：飞书文件消息
+- 输入：飞书文件或图片消息
 - 输出：本地文件 + Foxmail 发件动作
 - 适用：固定收件人、固定 Windows 机器、轻量自动转发
 
 ## 功能概览
 
 - 使用飞书开放平台长连接接收机器人消息事件
-- 只处理 `file` 类型消息，忽略其他消息类型
+- 处理 `file` 和 `image` 类型消息，忽略其他消息类型
 - 把收到的文件下载到本地指定目录
 - 按文件名自动规整非法字符，避免 Windows 路径报错
 - 自动去重，避免同一条消息重复下载、重复发件
@@ -43,7 +43,7 @@ flowchart LR
 
 ## 工作流程
 
-1. 飞书用户给机器人发送一个文件消息。
+1. 飞书用户给机器人发送一个文件或图片消息。
 2. 程序通过飞书长连接收到 `im.message.receive_v1` 事件。
 3. 如果消息符合过滤规则，任务会进入后台队列。
 4. 程序通过飞书接口下载文件到本地目录。
@@ -230,7 +230,7 @@ dist\FeishuFileMailer\FeishuFileMailer.exe
 
 - 飞书应用是否订阅了 `im.message.receive_v1`
 - 权限是否足够
-- 发来的是否真的是文件消息，而不是图片、文本或卡片
+- 发来的是否真的是文件或图片消息，而不是文本或卡片
 - `allowed_chat_ids` / `allowed_sender_open_ids` 是否误设成了不匹配的白名单
 
 ### 2. 文件下载成功，但 Foxmail 没有被拉起

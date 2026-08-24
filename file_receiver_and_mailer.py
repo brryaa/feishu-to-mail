@@ -23,13 +23,13 @@ api_client = lark.Client.builder().app_id(APP_ID).app_secret(APP_SECRET).build()
 foxmail_sender = FoxmailSender(CONFIG)
 
 
-def process_file_task(msg_id: str, file_key: str, file_name: str, sender_open_id: str) -> None:
+def process_file_task(msg_id: str, file_key: str, file_name: str, sender_open_id: str, resource_type: str) -> None:
     print(f"\n[1] 后台线程接手任务: {file_name}")
 
     request = GetMessageResourceRequest.builder() \
         .message_id(msg_id) \
         .file_key(file_key) \
-        .type("file") \
+        .type(resource_type) \
         .build()
 
     response = api_client.im.v1.message_resource.get(request)
@@ -75,16 +75,22 @@ def do_p2_im_message_receive_v1(data: P2ImMessageReceiveV1) -> None:
 
     print(f"收到飞书消息: type={msg.message_type}, id={msg.message_id}")
 
-    if msg.message_type == "file":
+    if msg.message_type in ("file", "image"):
         content_dict = json.loads(msg.content)
-        file_key = content_dict.get("file_key")
-        file_name = content_dict.get("file_name", "unnamed_file")
+        if msg.message_type == "image":
+            file_key = content_dict.get("image_key")
+            file_name = content_dict.get("file_name", f"{msg.message_id}.png")
+            resource_type = "image"
+        else:
+            file_key = content_dict.get("file_key")
+            file_name = content_dict.get("file_name", "unnamed_file")
+            resource_type = "file"
 
         print(f"⚡ 主程序捕获事件: {file_name}，已分发给后台线程。")
 
         task_thread = threading.Thread(
             target=process_file_task,
-            args=(msg.message_id, file_key, file_name, sender_open_id),
+            args=(msg.message_id, file_key, file_name, sender_open_id, resource_type),
             daemon=True,
         )
         task_thread.start()

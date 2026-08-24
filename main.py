@@ -141,12 +141,19 @@ class FeishuClient:
         self.config = config
         self.api_client = lark.Client.builder().app_id(config.app_id).app_secret(config.app_secret).build()
 
-    def download_message_file(self, message_id: str, file_key: str, file_name: str, download_dir: Path) -> Path:
+    def download_message_file(
+        self,
+        message_id: str,
+        file_key: str,
+        file_name: str,
+        download_dir: Path,
+        resource_type: str = "file",
+    ) -> Path:
         target = unique_path(download_dir / sanitize_filename(file_name))
         request = GetMessageResourceRequest.builder() \
             .message_id(message_id) \
             .file_key(file_key) \
-            .type("file") \
+            .type(resource_type) \
             .build()
         response = self.api_client.im.v1.message_resource.get(request)
         if not response.success():
@@ -275,7 +282,7 @@ class FileRelayApp:
         if self.config.allowed_sender_open_ids and sender_open_id not in self.config.allowed_sender_open_ids:
             LOG.info("忽略消息，sender_open_id 不在允许列表中: %s", sender_open_id)
             return False
-        return str(message.get("message_type", "")).strip().lower() == "file"
+        return str(message.get("message_type", "")).strip().lower() in {"file", "image"}
 
     def on_message_event(self, data: P2ImMessageReceiveV1) -> None:
         msg = data.event.message
@@ -313,8 +320,14 @@ class FileRelayApp:
             return
         try:
             content = json.loads(msg.content)
-            file_key = str(content["file_key"])
-            file_name = str(content.get("file_name") or f"{file_key}.bin")
+            if str(msg.message_type).lower() == "image":
+                file_key = str(content["image_key"])
+                file_name = str(content.get("file_name") or f"{msg.message_id}.png")
+                resource_type = "image"
+            else:
+                file_key = str(content["file_key"])
+                file_name = str(content.get("file_name") or f"{file_key}.bin")
+                resource_type = "file"
             print(f"捕获到文件消息: {file_name}，准备入队处理")
         except Exception:
             LOG.exception("文件消息内容解析失败: %s", msg.content)
@@ -329,6 +342,7 @@ class FileRelayApp:
                 "message_id": message_id,
                 "file_key": file_key,
                 "file_name": file_name,
+                "resource_type": resource_type,
                 "sender_open_id": sender_open_id,
             }
         )
@@ -342,12 +356,14 @@ class FileRelayApp:
                 message_id = str(payload["message_id"])
                 file_key = str(payload["file_key"])
                 file_name = str(payload["file_name"])
+                resource_type = str(payload.get("resource_type", "file"))
                 sender_open_id = str(payload["sender_open_id"])
                 local_path = self.feishu_client.download_message_file(
                     message_id=message_id,
                     file_key=file_key,
                     file_name=file_name,
                     download_dir=self.config.download_dir,
+                    resource_type=resource_type,
                 )
                 print(f"文件已下载到: {local_path}")
                 LOG.info("文件已下载: %s", local_path)
